@@ -1,0 +1,54 @@
+<html>
+	
+	<head>
+
+		<title>Tweetopia: Round One</title>
+	
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"> </script>
+	
+		<script type="text/javascript">
+		
+			searchURL="http://search.twitter.com/search.json";
+			searchQueryString = "?q=%23webvisions&callback=?&rpp=25"
+			
+			$.ajax( {
+				url: searchURL + searchQueryString,
+				dataType: "jsonp",
+				timeout : 5000,
+				success: function( data ) {
+					if (data.results.length) {
+						for (resultIndex in data.results) {
+							tweetText = data.results[resultIndex].text;
+							tweetDiv = $('<div/>').addClass('tweetBox');
+							$(tweetDiv).html(tweetText);
+							$('body').append(tweetDiv);
+						}
+					}
+				},	
+				error: function() {	
+				}
+			});
+			
+		</script>
+	
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+			}
+			.tweetBox {
+				width:400px;
+				height:100px;
+				background: #efefef;
+				margin: 12px;
+				float: left;
+				padding: 10px;
+			}
+		</style>
+		
+	</head>
+	
+	<body>
+	</body>
+
+</html>
