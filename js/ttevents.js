@@ -12,6 +12,12 @@ var ttevents = {
 		tweetopia.renderer.setSize( tweetopia.renderWidth, tweetopia.renderHeight );
 	},
 	
+	onDocumentMouseDown: function (event) {
+		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
+		window.open(curPanel.url);
+
+	},
+
 	onDocumentMouseMove: function (event) {
 	
 		var mouseX = ( event.clientX - (tweetopia.renderWidth / 2) );

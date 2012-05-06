@@ -4,6 +4,8 @@ var tweetopia = {
 
 	panels: [],
 	curPanelIndex: -1,
+	loadCount: 0,
+	loadComplete: false,
 	
 	// Main init function
 
@@ -12,19 +14,48 @@ var tweetopia = {
 		// Initialize
 
 		tweetopia.setupScene();
-		tweetopia.fetchData("%23WVpdx");
+		tweetopia.setupEnvironment();
+
+		var searchString = "%23WVpdx";
+		var searchURL="http://search.twitter.com/search.json";
+		var searchQueryString = "?q=" + searchString + "&rpp=20&callback=?"
+		tweetopia.fetchData(searchURL + searchQueryString);
+
+		// Preload Images
+
+		tweetopia.bubbleImage = new Image();
+		tweetopia.bubbleImage.onload = function () { tweetopia.checkLoad(); };
+		tweetopia.bubbleImage.src = "textures/bubble.png";
+
+		tweetopia.dudeRing = new Image();
+		tweetopia.dudeRing.onload = function () { tweetopia.checkLoad(); };
+		tweetopia.dudeRing.src = "textures/dudeRing.png";		
 
 		// Setup Events
 
 		window.addEventListener( 'resize', function (event) { ttevents.onWindowResize(event) }, false );
+		document.addEventListener( 'mousedown', ttevents.onDocumentMouseDown, false );	
 		document.addEventListener( 'mousemove', ttevents.onDocumentMouseMove, false );	
 		document.addEventListener( 'keydown', ttevents.onKeyDown, false );
-		
+
 		// Start Animation
 
 		tweetopia.animate();
 	},
 	
+	// Check for preload completion
+
+	checkLoad: function () {
+		tweetopia.loadCount++;
+
+		if (tweetopia.loadCount >= 3) {
+			tweetopia.loadComplete = true;
+			tweetopia.parseData(tweetopia.twitterData);
+			setInterval("tweetopia.updateData()", 1000 * 300);
+			ttcontrol.nextPanel();
+		}
+	},
+
 	// Setup Three.js scene
 
 	setupScene: function () {
@@ -54,12 +85,19 @@ var tweetopia = {
 		var ambient = new THREE.AmbientLight( 0x111111 );
 		tweetopia.scene.add( ambient );
 
-		var directionalLight = new THREE.DirectionalLight( 0xffffff, 1.25 );
-		directionalLight.position.set( 0, 1, -1 );
+		var directionalLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
+		directionalLight.position.set( 0, 1, 1 );
 		tweetopia.scene.add( directionalLight );		
+
+	},
+
+	// Setup Environment
+
+	setupEnvironment: function () {
 
 		// Add Ground
 
+		var simplex = new SimplexNoise();
 		var groundGeometry = new THREE.PlaneGeometry( 8192, 8192, 48, 48 );
 		THREE.GeometryUtils.triangulateQuads( groundGeometry );
 
@@ -73,7 +111,9 @@ var tweetopia = {
 		}
 
 		for ( var i = 0, l = groundGeometry.vertices.length; i < l; i ++ ) {
-			groundGeometry.vertices[ i ].y = Math.sin( i ) * 20 + Math.cos( i - ( i * 64 ) ) ;
+			//groundGeometry.vertices[ i ].y = Math.sin( i ) * 20 + Math.cos( i - ( i * 64 ) ) ;
+			groundGeometry.vertices[ i ].y  = simplex.noise(groundGeometry.vertices[ i ].x / 1024, groundGeometry.vertices[ i ].z / 1024 ) * 64;
+			groundGeometry.vertices[ i ].x +=  Math.random() * 64 - 32;
 		}
 
 		var groundMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
@@ -88,7 +128,7 @@ var tweetopia = {
 
 		// Add Sky
 
-		var skyGeometry = new THREE.CylinderGeometry( 8192, 8192, 2048, 40, 1, true );
+		var skyGeometry = new THREE.CylinderGeometry( 6000, 6000, 2000, 40, 1, true );
 		var faceIndices = [ 'a', 'b', 'c', 'd' ];
 		for ( var i = 0, l = skyGeometry.faces.length; i < l; i ++ ) {
 			var curFace = skyGeometry.faces[i];
@@ -121,20 +161,31 @@ var tweetopia = {
 
 	// Fetch Twitter data
 	
-	fetchData: function (searchString) {
-		var searchURL="http://search.twitter.com/search.json";
-		var searchQueryString = "?q=" + searchString + "&callback=?&rpp=25"
+	fetchData: function (searchURL) {
 
 		$.ajax( {
-			url: searchURL + searchQueryString,
+			url: searchURL,
 			dataType: "jsonp",
 			timeout : 5000,
 			success: function( data ) {
-				tweetopia.parseData(data);
+				tweetopia.twitterData = data;
+
+				if (tweetopia.loadComplete)
+					tweetopia.parseData(data);
+				else
+					tweetopia.checkLoad();
 			},	
 			error: function() {	
 			}
 		});	
+	},
+
+	updateData: function () {
+
+		var searchURL="http://search.twitter.com/search.json";
+		var searchQueryString = tweetopia.twitterData.refresh_url + "&rpp=25&callback=?"
+		tweetopia.fetchData(searchURL + searchQueryString);
+
 	},
 	
 	// Parse and store Twitter data
@@ -142,6 +193,8 @@ var tweetopia = {
 	parseData: function(data) {
 
 		if (data.results.length) {
+			var panelArray = [];
+
 			for (var resultIndex in data.results) {
 
 				var tweetText = data.results[resultIndex].text;
@@ -153,27 +206,65 @@ var tweetopia = {
 
 				var tweetCanvas = tweetopia.drawCanvas(tweetText);
 
-				// Add panel to scene
+				// Build Panel
 
 				var panelTexture = new THREE.Texture( $(tweetCanvas)[0] );
+				panelTexture.minFilter = panelTexture.magFilter = THREE.LinearFilter;
 				panelTexture.needsUpdate = true;
 				
 				var panelMaterial = new THREE.MeshBasicMaterial( { map: panelTexture, transparent: true} );
+				var panelMesh = new THREE.Mesh( new THREE.PlaneGeometry( 240, 80, 1, 1 ),  panelMaterial);	
 				
-				var panelMesh = new THREE.Mesh( new THREE.PlaneGeometry( 200, 50, 1, 1 ),  panelMaterial);	
-				panelMesh.doubleSided = true;
 				panelMesh.rotation.x = Math.PI/2;
-
-				panelMesh.position.x = Math.random() * 4096 - 2048;
+				panelMesh.position.x = Math.random() * 6000 - 3000;
 				panelMesh.position.y = 128;
-				panelMesh.position.z = Math.random() * 4096 - 2048;
+				panelMesh.position.z = Math.random() * 6000 - 3000;
+
+				panelMesh.visible = false;
+
+				panelMesh.url = "https://twitter.com/#!/" + data.results[resultIndex].from_user + 
+								"/status/" + data.results[resultIndex].id_str ;
 
 				tweetopia.scene.add(panelMesh);
-				tweetopia.panels.push(panelMesh);
+
+				// Add dude
+
+				var dudeGeometry = new THREE.CylinderGeometry( 12, 12, 4, 24, 1);
+				var dudeMaterial = new THREE.MeshLambertMaterial({color: 0x667799});
+				var dudeMesh = new THREE.Mesh(dudeGeometry, dudeMaterial);
+
+				dudeMesh.scale.x = dudeMesh.scale.y = dudeMesh.scale.z = .1;
+				dudeMesh.rotation.x = Math.PI/2;
+				dudeMesh.position.x = panelMesh.position.x - 48;
+				dudeMesh.position.y = 72;
+				dudeMesh.position.z = panelMesh.position.z;
+
+				var dudeRingMaterial = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture( "textures/dudeRing.png" ), transparent: true});
+				var dudeRingMesh = new THREE.Mesh(new THREE.PlaneGeometry( 32, 32, 1, 1), dudeRingMaterial);
+				
+				dudeRingMesh.doubleSided = true;
+				dudeRingMesh.position.y = .1;
+				dudeMesh.add(dudeRingMesh);
+
+				panelMesh.dudeMesh = dudeMesh;
+				tweetopia.scene.add(dudeMesh);
+
+				new TWEEN.Tween(dudeMesh.scale)
+					.to({x:1, y:1, z: 1}, 1000)
+					.easing( TWEEN.Easing.Bounce.Out)
+					.start();
+
+				// Add elements to scene
+
+				panelArray.push(panelMesh);
 			}
 
-			tweetopia.nextPanel();
+			if (panelArray.length) {
 
+				tweetopia.curPanelIndex += panelArray.length;
+				tweetopia.panels = panelArray.concat(tweetopia.panels);
+			}
+			
 		}
 	},
 
@@ -181,42 +272,61 @@ var tweetopia = {
 
 	drawCanvas: function (tweetText) {
 
-			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:800,height:200});
+			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:960,height:320});
 			var tweetContext = $(tweetCanvas)[0].getContext('2d');
 
 			// Draw background
 
-			tweetContext.fillStyle = "rgba(228, 228, 228, 1)";
-			tweetContext.fillRect(5, 5, 790, 190);			
+
+    		tweetContext.drawImage(tweetopia.bubbleImage,0,0);	
 
 			// Manually wrap lines
 
-			var tweetWidth = 760;
-			var tweetFontSize = 32;
+			var tweetWidth = 864;
+			var tweetFontSize = 36;
 			var tweetLineHeight = 1.5;
-			var tweetX = 20;
-			var tweetY = 20 + tweetFontSize;
+			//var tweetX = 48;
+			//var tweetY = 48 + tweetFontSize;
 
 			tweetContext.fillStyle = "rgba(32, 32, 32, .75)";
 			tweetContext.font = tweetFontSize + "px/" + tweetLineHeight + " Georgia";			
 
 			var tweetWords = tweetText.split(" ");
-			var tweetLine = "";
+			var tweetLines = [""];
+			var tweetLineIndex = 0;
+
+			var maxLineWidth = 0;
 
 			for (var x = 0; x < tweetWords.length; x++) {
-				var curLine = tweetLine + tweetWords[x] + " ";
-				var curMetrics = tweetContext.measureText(curLine);
-				var curWidth = curMetrics.width;
-				if (curWidth > tweetWidth) {
-					tweetContext.fillText(tweetLine, tweetX, tweetY);
-					tweetLine = tweetWords[x] + " ";
-					tweetY += tweetFontSize * tweetLineHeight;
+				var curLine = tweetLines[tweetLineIndex] + tweetWords[x] + " ";
+				var testMetrics = tweetContext.measureText(curLine);
+
+				if (testMetrics.width > tweetWidth) {
+					tweetLineIndex++;
+					tweetLines[tweetLineIndex] = tweetWords[x] + " ";
 				}
 				else {
-					tweetLine = curLine;
+					tweetLines[tweetLineIndex] = curLine;
 				}
+
+				var curMetrics = tweetContext.measureText(tweetLines[tweetLineIndex]);
+				if (curMetrics.width > maxLineWidth) maxLineWidth = curMetrics.width;
 			}
-			tweetContext.fillText(tweetLine, tweetX, tweetY);
+
+			var lineHeight = tweetFontSize * tweetLineHeight;
+			var totalHeight = lineHeight * (tweetLines.length - 1)   ;
+
+			// Draw Text
+
+			var tweetX = 960/2 - maxLineWidth / 2;
+			var tweetY = 300/2 - totalHeight/2;
+
+			for ( x = 0; x < tweetLines.length; x++) {
+				var curLine = tweetLines[x];
+
+				tweetContext.fillText(curLine, tweetX, tweetY + ( x * lineHeight));
+
+			}
 
 			return tweetCanvas;
 	},
@@ -224,19 +334,9 @@ var tweetopia = {
 	// Main animation routine
 
 	animate: function() {		
-
-		// for (var panelIndex in tweetopia.panels) {
-		// 	var curPanel = tweetopia.panels[panelIndex];
-		// 	if (Math.abs(curPanel.velocity.x) > .05 || Math.abs(curPanel.velocity.y) > .05) {
-		// 		curPanel.position.addSelf(curPanel.velocity);
-		// 		curPanel.velocity.multiplyScalar(.995);
-		// 	}
-		// }
-
 	    TWEEN.update();
-
-		requestAnimationFrame( tweetopia.animate );
 		tweetopia.render();
+		requestAnimationFrame( tweetopia.animate );		
 	},
 
 	// Main render routine
@@ -248,41 +348,5 @@ var tweetopia = {
 
 	// Control routines
 
-	nextPanel: function() {
-		tweetopia.curPanelIndex++;
-        if (tweetopia.curPanelIndex >= tweetopia.panels.length) tweetopia.curPanelIndex = 0;		
 
-		tweetopia.visitPanel(tweetopia.curPanelIndex);
-	},
-
-	previousPanel: function() {
-		tweetopia.curPanelIndex--;
-		if (tweetopia.curPanelIndex < 0) tweetopia.curPanelIndex = tweetopia.panels.length - 1;
-
-		tweetopia.visitPanel(tweetopia.curPanelIndex);
-
-	},
-
-	visitPanel: function (visitPanelIndex) {
-
-		var curPanel = tweetopia.panels[visitPanelIndex];
-
-        new TWEEN.Tween( tweetopia.camera.target )
-                .to( { x: curPanel.position.x, y: curPanel.position.y, z: curPanel.position.z }, 2400 )
-                .easing( TWEEN.Easing.Quintic.InOut)
-                .start();
-
-        var tweenFly = new TWEEN.Tween( tweetopia.camera.position )
-                .to( { x: curPanel.position.x - 64, y: curPanel.position.y, z: curPanel.position.z + 256 }, 3200 )
-                .easing( TWEEN.Easing.Cubic.In);
-
-        var tweenOrbit = new TWEEN.Tween( tweetopia.camera.position )
-        		.to( {x: curPanel.position.x + 64}, 8000)
-        		.easing( TWEEN.Easing.Cubic.Out)
-        		.onComplete( function () { tweetopia.nextPanel() });
-                
-        tweenFly.chain(tweenOrbit);
-        tweenFly.start();
-
-	}
 }

@@ -1,3 +1,14 @@
+r07
+
+-	Added SimpleNoise.js for more fluid terrain.
+-	New ttcontrol object for scene control fucntions.
+-	Restyled panel as speech bubble with pre-build image.
+-	More refined text formatting.
+-	Placeholder for characters with basic texturing.
+-	Showing and hiding of bubbles on visit.
+-	Periodically check for new tweets.
+-	Initial support for clicking through to twitter.com.
+
 r06
 
 -	Added Tween.js for animating properties with easing.
