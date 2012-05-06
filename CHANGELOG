@@ -1,3 +1,12 @@
+r09
+
+-	Detection of WebGL support.
+-	Colored hashtags and usernames.
+-	Added simple favicon.
+-	Pre-launch splash page.
+-	URL hashtag support.
+-	Defaults to #WebGL.
+
 r08
 
 -	Splash screen on startup.

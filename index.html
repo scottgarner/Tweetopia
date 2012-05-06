@@ -1,31 +1,48 @@
+<!DOCTYPE html>
 <html>
-	
 	<head>
-		
-		<title>Tweetopia: Round Eight</title>
+  	  <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+		<meta name="Author" content="Scott Garner" />
+
+		<title>Tweetopia: Round Nine</title>
 	
-		<link rel="stylesheet" type="text/css" href="css/screen.css"/>
+		<link rel="icon" type="image/png" href="images/favicon.png" />
+		<link rel="stylesheet" type="text/css" href="css/screen.css" />
 
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 
 		<script type="text/javascript" src="js/Three.js"></script>
 		<script type="text/javascript" src="js/Tween.js"></script>
+		<script type="text/javascript" src="js/Detector.js"></script>		
 		<script type="text/javascript" src="js/SimplexNoise.js"></script>
-
 
 		<script type="text/javascript" src="js/tweetopia.js"></script>
 		<script type="text/javascript" src="js/ttevents.js"></script>
 		<script type="text/javascript" src="js/ttcontrol.js"></script>
-		<script type="text/javascript" src="js/ttshaders.js"></script>		
+		<script type="text/javascript" src="js/ttshaders.js"></script>	
+		<script type="text/javascript" src="js/ttcanvas.js"></script>	
 
 		<script type="text/javascript">
-			$("document").ready( function() { tweetopia.init(); } );
+			$("document").ready( function() { 
+				if ( ! Detector.webgl ) {
+					$("#error").show();
+				} else {
+					tweetopia.init(); 
+				}
+			} );
 		</script>
 	
 	</head>
 	
 	<body>
 		<div id="main">
+			<div id="error">
+				<img src="textures/logo.png" width="768" height="192" alt="" />
+				<div id="errorMessage">
+					Uh oh! Your browser or graphics card does not seem to support <a href="http://khronos.org/webgl/wiki/Getting_a_WebGL_Implementation">WebGL</a>.
+					Find out how to get it <a href="http://get.webgl.org/">here</a>
+				</div>
+			</div>
 			<div id="render"></div>
 		</div>
 	</body>

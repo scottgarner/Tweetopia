@@ -10,21 +10,70 @@ var ttevents = {
 		tweetopia.camera.updateProjectionMatrix();
 	
 		tweetopia.renderer.setSize( tweetopia.renderWidth, tweetopia.renderHeight );
+
+		var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
+		tweetopia.uvRenderTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, parameters  );			
 	},
 	
+	onWindowHashChange: function (event) {
+		if (event.oldURL.indexOf("#") >= 0) {
+			window.location.reload(true);
+		}
+	},
+
 	onDocumentMouseDown: function (event) {
 		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
+
+		var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
+		tweetopia.projector.unprojectVector( vector, tweetopia.camera );
+	
+		var ray = new THREE.Ray( tweetopia.camera.position, vector.subSelf( tweetopia.camera.position ).normalize() );
+	
+		var intersects = ray.intersectObjects( [curPanel] );
+
+		if ( intersects.length > 0 ) {
+
+			var holdMaterial = curPanel.material;
+			curPanel.material = tweetopia.uvMaterial;
+			tweetopia.renderer.render( tweetopia.scene, tweetopia.camera, tweetopia.uvRenderTexture , true );
+			curPanel.material = holdMaterial;
+
+			var glContext = tweetopia.renderer.getContext();
+
+			try {	
+				var buffer = glContext.readPixels(event.clientX, window.innerHeight - event.clientY, 1, 1, glContext.RGBA, glContext.UNSIGNED_BYTE);
+			} catch (err) {
+			}
+			if(!buffer){
+				buffer = new Uint8Array(1 * 1 * 4);
+				glContext.readPixels(event.clientX, window.innerHeight -  event.clientY, 1, 1, glContext.RGBA, glContext.UNSIGNED_BYTE, buffer);
+			}
+
+			var clickX = buffer[0] / 255 * 1024;
+			var clickY = buffer[1] / 255 * 512;
+
+			for (var curBoundingBoxIndex in curPanel.boundingBoxes) {
+				var curBoundingBox = curPanel.boundingBoxes[curBoundingBoxIndex];
+
+				if (clickX > curBoundingBox.start.x && 
+					clickX < curBoundingBox.end.x &&
+					clickY > curBoundingBox.end.y &&
+					clickY < curBoundingBox.start.y) {
+
+					window.open(curBoundingBox.url);
+				}
+
+			}
+
+		}
+
 		//window.open(curPanel.url);
 
 	},
 
 	onDocumentMouseMove: function (event) {
 	
-		var mouseX = ( event.clientX - (tweetopia.renderWidth / 2) );
-		var mouseY = ( event.clientY - (tweetopia.renderHeight / 2) );
-		
-		tweetopia.camera.rotation.x = (mouseY / (tweetopia.renderHeight /2 )) * -10 * (Math.PI /180);	
-		tweetopia.camera.rotation.y = (mouseX / (tweetopia.renderWidth /2 )) * -10 * (Math.PI /180);	
+		document.body.style.cursor = 'default';
 		
 	},
 	onKeyDown: function ( event ) {

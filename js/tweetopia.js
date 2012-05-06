@@ -11,16 +11,28 @@ var tweetopia = {
 
 	init: function() {
 
+		document.body.style.cursor = 'none';
+
 		// Initialize
 
+		tweetopia.colors = [ 
+			new THREE.Color(0x000000), 
+			new THREE.Color(0x5f7380), 
+			new THREE.Color(0xffffff)]
 		tweetopia.setupScene();
-		tweetopia.setupEnvironment();
+		tweetopia.buildEnvironment();
 
 		// Fetch Twitter Data
 
-		var searchString = "%23WVpdx";
+		var searchString;
+
+		if (location.hash) 
+			searchString = location.hash.substr(1);
+		else
+			location.hash = searchString = "WebGL";
+
 		var searchURL="http://search.twitter.com/search.json";
-		var searchQueryString = "?q=" + searchString + "&rpp=20&callback=?"
+		var searchQueryString = "?q=%23" + searchString + "&rpp=20&include_entities=true&callback=?"
 		tweetopia.fetchData(searchURL + searchQueryString);
 
 		// Preload Images
@@ -36,6 +48,7 @@ var tweetopia = {
 		// Setup Events
 
 		window.addEventListener( 'resize', function (event) { ttevents.onWindowResize(event) }, false );
+		window.addEventListener('hashchange', function (event) { ttevents.onWindowHashChange(event) }, false);
 		document.addEventListener( 'mousedown', ttevents.onDocumentMouseDown, false );	
 		document.addEventListener( 'mousemove', ttevents.onDocumentMouseMove, false );	
 		document.addEventListener( 'keydown', ttevents.onKeyDown, false );
@@ -52,7 +65,7 @@ var tweetopia = {
 
 		if (tweetopia.loadCount >= 3) {
 			tweetopia.loadComplete = true;
-			tweetopia.parseData(tweetopia.twitterData);
+			tweetopia.buildPanels(tweetopia.twitterData);
 			setInterval("tweetopia.updateData()", 1000 * 60);
 			setTimeout("tweetopia.startAnimation()", 1000 * 3);
 		}
@@ -68,6 +81,40 @@ var tweetopia = {
 
 	},
 
+	// Fetch Twitter data
+
+	fetchData: function (searchURL) {
+
+		$.ajax( {
+			url: searchURL,
+			dataType: "jsonp",
+			timeout : 5000,
+			success: function( data ) {
+				tweetopia.twitterData = data;
+
+				if (tweetopia.loadComplete)
+					tweetopia.buildPanels(data);
+				else
+					tweetopia.checkLoad();
+			},	
+			error: function() {
+				console.log("Error fetching tweets.");	
+			}
+		});	
+	},
+
+	updateData: function () {
+		document.body.style.cursor = 'none';
+
+		if (tweetopia.panels.length > 80) return;
+
+		var searchURL="http://search.twitter.com/search.json";
+		var searchQueryString = tweetopia.twitterData.refresh_url + "&rpp=20&include_entities=true&callback=?"
+		tweetopia.fetchData(searchURL + searchQueryString);
+
+
+	},
+
 	// Setup Three.js scene
 
 	setupScene: function () {
@@ -77,6 +124,8 @@ var tweetopia = {
 		tweetopia.renderWidth = window.innerWidth;
 		tweetopia.renderHeight = window.innerHeight;
 
+		tweetopia.projector = new THREE.Projector();
+
 		tweetopia.camera = new THREE.PerspectiveCamera( 36, tweetopia.renderWidth/ tweetopia.renderHeight, .1, 16384 );
 		tweetopia.camera.position.y = 256;
 		tweetopia.camera.position.z = 1200;
@@ -84,13 +133,24 @@ var tweetopia = {
 
 		tweetopia.scene = new THREE.Scene();
 		tweetopia.scene.add(tweetopia.camera);
-		tweetopia.scene.fog = new THREE.Fog( 0x5e6f7a, 1200, 3200 );
+		tweetopia.scene.fog = new THREE.Fog( tweetopia.colors[1].getHex(), 1200, 3200 );
 		
 		tweetopia.renderer = new THREE.WebGLRenderer( { antialias: true });
 		tweetopia.renderer.setSize( tweetopia.renderWidth, tweetopia.renderHeight );
-		tweetopia.renderer.setClearColorHex( 0x000000, 1 );
 
 		$("#render").append( tweetopia.renderer.domElement );
+
+		// UV Pass
+
+		var uvShader = THREE.ShaderUtils.lib["uv"]; 
+		
+		tweetopia.uvMaterial = new THREE.ShaderMaterial( { 
+			vertexShader: uvShader.vertexShader, 
+			fragmentShader: uvShader.fragmentShader 
+		}); 
+
+		var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat };
+		tweetopia.uvRenderTexture = new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, parameters  );		
 
 		// Add Lights
 
@@ -117,7 +177,7 @@ var tweetopia = {
 
 	// Setup Environment
 
-	setupEnvironment: function () {
+	buildEnvironment: function () {
 
 		// Add Ground
 
@@ -146,12 +206,13 @@ var tweetopia = {
 		}
 
 		for ( var i = 0, l = groundGeometry.vertices.length; i < l; i ++ ) {
-			//groundGeometry.vertices[ i ].y = Math.sin( i ) * 20 + Math.cos( i - ( i * 64 ) ) ;
-			groundGeometry.vertices[ i ].y  = simplex.noise(groundGeometry.vertices[ i ].x / 1024, groundGeometry.vertices[ i ].z / 1024 ) * 64;
+			groundGeometry.vertices[ i ].y  = simplex.noise(groundGeometry.vertices[ i ].x / 1024, 
+				groundGeometry.vertices[ i ].z / 1024 ) * 64;
 			groundGeometry.vertices[ i ].x +=  Math.random() * 128 - 64;
 		}
 
-		var groundMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
+		var groundMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading, 
+			vertexColors: THREE.VertexColors } );
 		var groundMesh = new THREE.Mesh( groundGeometry,  groundMaterial);	
 
 		var wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading,
@@ -173,8 +234,8 @@ var tweetopia = {
 		skyTexture.wrapS = skyTexture.wrapT = THREE.RepeatWrapping;	
 
 		skyUniforms["map"].texture = skyTexture;
-		skyUniforms["topColor"].value = new THREE.Vector3( 0, 0, 0);
-		skyUniforms["bottomColor"].value = new THREE.Vector3( 95.0 / 256.0, 115.0 / 256.0 , 128.0 / 256.0);
+		skyUniforms["topColor"].value = new THREE.Vector3( tweetopia.colors[0].r, tweetopia.colors[0].g , tweetopia.colors[0].b);
+		skyUniforms["bottomColor"].value = new THREE.Vector3( tweetopia.colors[1].r, tweetopia.colors[1].g , tweetopia.colors[1].b);
 		skyUniforms["offsetRepeat"].value = new THREE.Vector4( 0, 0, 36, 3);
 
 		var skyMaterial = new THREE.ShaderMaterial( {
@@ -230,42 +291,10 @@ var tweetopia = {
 		tweetopia.scene.add(starsParticles);
 
 	},
-
-	// Fetch Twitter data
 	
-	fetchData: function (searchURL) {
-
-		$.ajax( {
-			url: searchURL,
-			dataType: "jsonp",
-			timeout : 5000,
-			success: function( data ) {
-				tweetopia.twitterData = data;
-
-				if (tweetopia.loadComplete)
-					tweetopia.parseData(data);
-				else
-					tweetopia.checkLoad();
-			},	
-			error: function() {
-				console.log("Error fetching tweets.")	
-			}
-		});	
-	},
-
-	updateData: function () {
-
-		if (tweetopia.panels.length > 80) return;
-
-		var searchURL="http://search.twitter.com/search.json";
-		var searchQueryString = tweetopia.twitterData.refresh_url + "&rpp=20&callback=?"
-		tweetopia.fetchData(searchURL + searchQueryString);
-
-	},
+	// Build panels and dudes
 	
-	// Parse and store Twitter data
-	
-	parseData: function(data) {
+	buildPanels: function(data) {
 
 		if (data.results.length) {
 			var panelArray = [];
@@ -281,7 +310,7 @@ var tweetopia = {
 
 				// Setup canvas and text
 
-				var tweetCanvas = tweetopia.drawCanvas(tweetText);
+				var tweetCanvas = ttcanvas.drawBubble(tweetText, data.results[resultIndex].entities);
 
 				// Build Panel
 
@@ -302,12 +331,14 @@ var tweetopia = {
 				panelMesh.url = "https://twitter.com/#!/" + data.results[resultIndex].from_user + 
 								"/status/" + data.results[resultIndex].id_str ;
 
+				panelMesh.boundingBoxes = tweetCanvas.boundingBoxes;
+
 				tweetopia.scene.add(panelMesh);
 
 				// Add dude
 
 				var dudeGeometry = new THREE.CylinderGeometry( 12, 12, 4, 24, 1);
-				var dudeMaterial = new THREE.MeshLambertMaterial({color: 0x5e6f7a});
+				var dudeMaterial = new THREE.MeshLambertMaterial({color: tweetopia.colors[1].getHex()});
 				var dudeMesh = new THREE.Mesh(dudeGeometry, dudeMaterial);
 
 				dudeMesh.scale.x = dudeMesh.scale.y = dudeMesh.scale.z = .1;
@@ -347,73 +378,6 @@ var tweetopia = {
 		}
 	},
 
-	// Create tweet canvas
-
-	drawCanvas: function (tweetText) {
-
-			tweetText = tweetText.replace( /\&amp;/g, '&' );
-			tweetText = tweetText.replace( /\&lt;/g, '<' );
-			tweetText = tweetText.replace( /\&gt;/g, '>' );
-
-			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:1024,height:512});
-			var tweetContext = $(tweetCanvas)[0].getContext('2d');
-
-			// Draw background
-
-
-    		tweetContext.drawImage(tweetopia.bubbleImage,0,0);	
-
-			// Manually wrap lines
-
-			var tweetWidth = 864;
-			var tweetFontSize = 36;
-			var tweetLineHeight = 1.5;
-			//var tweetX = 48;
-			//var tweetY = 48 + tweetFontSize;
-
-			tweetContext.fillStyle = "rgba(32, 32, 32, .75)";
-			tweetContext.font = tweetFontSize + "px/" + tweetLineHeight + " Georgia";			
-
-			var tweetWords = tweetText.split(" ");
-			var tweetLines = [""];
-			var tweetLineIndex = 0;
-
-			var maxLineWidth = 0;
-
-			for (var x = 0; x < tweetWords.length; x++) {
-				var curLine = tweetLines[tweetLineIndex] + tweetWords[x] + " ";
-				var testMetrics = tweetContext.measureText(curLine);
-
-				if (testMetrics.width > tweetWidth) {
-					tweetLineIndex++;
-					tweetLines[tweetLineIndex] = tweetWords[x] + " ";
-				}
-				else {
-					tweetLines[tweetLineIndex] = curLine;
-				}
-
-				var curMetrics = tweetContext.measureText(tweetLines[tweetLineIndex]);
-				if (curMetrics.width > maxLineWidth) maxLineWidth = curMetrics.width;
-			}
-
-			var lineHeight = tweetFontSize * tweetLineHeight;
-			var totalHeight = lineHeight * (tweetLines.length - 1)   ;
-
-			// Draw Text
-
-			var tweetX = 1024/2 - maxLineWidth / 2;
-			var tweetY = 512/2 - totalHeight/2 - 8;
-
-			for ( x = 0; x < tweetLines.length; x++) {
-				var curLine = tweetLines[x];
-
-				tweetContext.fillText(curLine, tweetX, tweetY + ( x * lineHeight));
-
-			}
-
-			return tweetCanvas;
-	},
-
 	// Main animation routine
 
 	animate: function() {		
@@ -428,8 +392,5 @@ var tweetopia = {
 		tweetopia.camera.lookAt( tweetopia.camera.target );
 		tweetopia.renderer.render( tweetopia.scene, tweetopia.camera );
 	},
-
-	// Control routines
-
 
 }

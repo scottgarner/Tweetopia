@@ -24,11 +24,11 @@ var ttcontrol = {
 	visitPanel: function (visitPanelIndex) {
 
 		var curPanel = tweetopia.panels[visitPanelIndex];
-		var targetTime = 2400;
+		var targetTime = 3000;
 
 		//console.log(tweetopia.camera.position.z + " " + curPanel.position.z);
 		if (tweetopia.camera.position.z < curPanel.position.z){
-			targetTime = 3600;
+			targetTime = 4000;
 			//console.log("flip");
 		} 
 
@@ -39,7 +39,7 @@ var ttcontrol = {
                 .start();
 
         var tweenFly = new TWEEN.Tween( tweetopia.camera.position )
-                .to( { x: curPanel.position.x - 64, y: [128,96], z: curPanel.position.z + 320 }, 3600 )
+                .to( { x: curPanel.position.x - 64, y: [128,96], z: curPanel.position.z + 360 }, 4000 )
                 .interpolation(TWEEN.Interpolation.CatmullRom)
                 .easing( TWEEN.Easing.Cubic.In)
                 .onComplete( function() { ttcontrol.showPanel() });
