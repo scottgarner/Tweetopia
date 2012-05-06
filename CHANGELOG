@@ -1,3 +1,8 @@
+r05
+
+-	Planar distribution of tweet panels.
+-	Support for keyboard-controlled camera animation between panels.
+
 r04
 
 -	Added Three.js for 3D environment with functions to setup, animate and render.

@@ -3,16 +3,18 @@
 var tweetopia = {
 
 	panels: [],
+	curPanelIndex: -1,
 	
 	// Main init function
 
 	init: function() {
 		tweetopia.setupScene();
-		tweetopia.fetchData("%23webvisions");
+		tweetopia.fetchData("%23WVpdx");
 
-		window.addEventListener( 'resize', function (event) { wvevents.onWindowResize(event) }, false );
-		document.addEventListener( 'mousemove', wvevents.onDocumentMouseMove, false );		
-
+		window.addEventListener( 'resize', function (event) { ttevents.onWindowResize(event) }, false );
+		document.addEventListener( 'mousemove', ttevents.onDocumentMouseMove, false );	
+		document.addEventListener( 'keydown', ttevents.onKeyDown, false );
+	
 		tweetopia.animate();
 	},
 	
@@ -23,17 +25,20 @@ var tweetopia = {
 		tweetopia.renderWidth = window.innerWidth;
 		tweetopia.renderHeight = window.innerHeight;
 
-		tweetopia.camera = new THREE.PerspectiveCamera( 36, tweetopia.renderWidth/ tweetopia.renderHeight, .1, 5000 );
-		tweetopia.camera.position.z = 1200		;
+		tweetopia.camera = new THREE.PerspectiveCamera( 36, tweetopia.renderWidth/ tweetopia.renderHeight, .1, 8192 );
+		tweetopia.camera.position.z = 1200;
 
 		tweetopia.scene = new THREE.Scene();
 		tweetopia.scene.add(tweetopia.camera);
+		tweetopia.scene.fog = new THREE.Fog( 0x333333, 1200, 3200 );
 		
-		tweetopia.renderer = new THREE.WebGLRenderer( { antialias: false });
+		tweetopia.renderer = new THREE.WebGLRenderer( { antialias: true });
 		tweetopia.renderer.setSize( tweetopia.renderWidth, tweetopia.renderHeight );
 		tweetopia.renderer.setClearColorHex( 0x333333, 1 );
 
 		$("#render").append( tweetopia.renderer.domElement );
+
+		
 	},
 
 	// Fetch Twitter data
@@ -81,7 +86,7 @@ var tweetopia = {
 				panelMesh.doubleSided = true;
 				panelMesh.position.z = resultIndex * -10;
 				panelMesh.rotation.x = Math.PI/2;
-				panelMesh.velocity = new THREE.Vector3(Math.random() * 4 - 2, Math.random() * 2 - 1, (data.results.length - resultIndex) /2);
+				panelMesh.velocity = new THREE.Vector3(Math.random() * 16 - 8, 0, Math.random() * 16 - 8);
 
 				tweetopia.scene.add(panelMesh);
 				tweetopia.panels.push(panelMesh);
@@ -99,7 +104,7 @@ var tweetopia = {
 
 			// Draw background
 
-			tweetContext.fillStyle = "rgba(192, 192, 192, 1)";
+			tweetContext.fillStyle = "rgba(228, 228, 228, 1)";
 			tweetContext.fillRect(5, 5, 790, 190);			
 
 			// Manually wrap lines
@@ -146,6 +151,8 @@ var tweetopia = {
 			}
 		}
 
+	    TWEEN.update();
+
 		requestAnimationFrame( tweetopia.animate );
 		tweetopia.render();
 	},
@@ -154,6 +161,33 @@ var tweetopia = {
 
 	render: function() {
 		tweetopia.renderer.render( tweetopia.scene, tweetopia.camera );
+	},
+
+	// Control routines
+
+	nextPanel: function() {
+		tweetopia.curPanelIndex++;
+        if (tweetopia.curPanelIndex >= tweetopia.panels.length) tweetopia.curPanelIndex = 0;		
+
+		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
+
+        new TWEEN.Tween( tweetopia.camera.position )
+                .to( { x: curPanel.position.x, y: curPanel.position.y , z: curPanel.position.z + 256 }, 3200 )
+                .easing( TWEEN.Easing.Quintic.EaseInOut)
+                .start();
+
+	},
+
+	previousPanel: function() {
+		tweetopia.curPanelIndex--;
+		if (tweetopia.curPanelIndex < 0) tweetopia.curPanelIndex = tweetopia.panels.length - 1;
+
+		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
+
+        new TWEEN.Tween( tweetopia.camera.position )
+                .to( { x: curPanel.position.x, y: curPanel.position.y, z: curPanel.position.z + 256 }, 3200 )
+                .easing( TWEEN.Easing.Quintic.EaseInOut)
+                .start();
 
 	}
 }
