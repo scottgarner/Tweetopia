@@ -16,6 +16,8 @@ var tweetopia = {
 		tweetopia.setupScene();
 		tweetopia.setupEnvironment();
 
+		// Fetch Twitter Data
+
 		var searchString = "%23WVpdx";
 		var searchURL="http://search.twitter.com/search.json";
 		var searchQueryString = "?q=" + searchString + "&rpp=20&callback=?"
@@ -51,9 +53,19 @@ var tweetopia = {
 		if (tweetopia.loadCount >= 3) {
 			tweetopia.loadComplete = true;
 			tweetopia.parseData(tweetopia.twitterData);
-			setInterval("tweetopia.updateData()", 1000 * 300);
-			ttcontrol.nextPanel();
+			setInterval("tweetopia.updateData()", 1000 * 60);
+			setTimeout("tweetopia.startAnimation()", 1000 * 3);
 		}
+	},
+
+	startAnimation: function () {
+		ttcontrol.nextPanel();
+
+		new TWEEN.Tween(tweetopia.logoMaterial)
+			.to ({ opacity : 0 }, 1000)
+			.onComplete (function () { tweetopia.logoMaterial.visible = false })
+			.start();
+
 	},
 
 	// Setup Three.js scene
@@ -66,17 +78,17 @@ var tweetopia = {
 		tweetopia.renderHeight = window.innerHeight;
 
 		tweetopia.camera = new THREE.PerspectiveCamera( 36, tweetopia.renderWidth/ tweetopia.renderHeight, .1, 16384 );
-		tweetopia.camera.position.y = 128;
+		tweetopia.camera.position.y = 256;
 		tweetopia.camera.position.z = 1200;
-		tweetopia.camera.target = new THREE.Vector3( 0, 0, 0 );
+		tweetopia.camera.target = new THREE.Vector3( 0, 256, 0 );
 
 		tweetopia.scene = new THREE.Scene();
 		tweetopia.scene.add(tweetopia.camera);
-		tweetopia.scene.fog = new THREE.Fog( 0x7790a0, 1200, 3200 );
+		tweetopia.scene.fog = new THREE.Fog( 0x5e6f7a, 1200, 3200 );
 		
 		tweetopia.renderer = new THREE.WebGLRenderer( { antialias: true });
 		tweetopia.renderer.setSize( tweetopia.renderWidth, tweetopia.renderHeight );
-		tweetopia.renderer.setClearColorHex( 0x333333, 1 );
+		tweetopia.renderer.setClearColorHex( 0x000000, 1 );
 
 		$("#render").append( tweetopia.renderer.domElement );
 
@@ -89,6 +101,18 @@ var tweetopia = {
 		directionalLight.position.set( 0, 1, 1 );
 		tweetopia.scene.add( directionalLight );		
 
+		// Add Logo
+
+		var logoGeometry = new THREE.PlaneGeometry( 1024, 256, 1, 1 );
+		tweetopia.logoMaterial = new THREE.MeshBasicMaterial( {map: THREE.ImageUtils.loadTexture( "textures/logo.png" ), transparent: true});
+		tweetopia.logoMaterial.doubleSided = true;
+
+		var logoMesh = new THREE.Mesh(logoGeometry, tweetopia.logoMaterial );
+		logoMesh.rotation.x = Math.PI/2;
+		logoMesh.position.y = 320;
+
+		tweetopia.scene.add(logoMesh);
+
 	},
 
 	// Setup Environment
@@ -98,14 +122,25 @@ var tweetopia = {
 		// Add Ground
 
 		var simplex = new SimplexNoise();
-		var groundGeometry = new THREE.PlaneGeometry( 8192, 8192, 48, 48 );
+		var groundGeometry = new THREE.PlaneGeometry( 8192, 8192, 48, 56 );
 		THREE.GeometryUtils.triangulateQuads( groundGeometry );
 
 		for ( var i = 0, l = groundGeometry.faces.length; i < l; i ++ ) {
 			for ( var j = 0; j < 3; j++) {
-				var color = new THREE.Color( 0xffffff );
-				var colorFactor = Math.random() + .25;
-				color.setRGB( 0.8 * colorFactor, 0.9 * colorFactor, 1 * colorFactor);
+				var color;
+
+				switch (j) {
+					case 0:
+						color = new THREE.Color( 0xe6e8ea );
+						break;
+					case 1:
+						color = new THREE.Color( 0xabb3b9 );
+						break;
+					case 2:
+						color = new THREE.Color( 0x5e6f7a );
+						break;
+				}
+				
 				groundGeometry.faces[ i ].vertexColors.push(color);
 			}
 		}
@@ -113,13 +148,14 @@ var tweetopia = {
 		for ( var i = 0, l = groundGeometry.vertices.length; i < l; i ++ ) {
 			//groundGeometry.vertices[ i ].y = Math.sin( i ) * 20 + Math.cos( i - ( i * 64 ) ) ;
 			groundGeometry.vertices[ i ].y  = simplex.noise(groundGeometry.vertices[ i ].x / 1024, groundGeometry.vertices[ i ].z / 1024 ) * 64;
-			groundGeometry.vertices[ i ].x +=  Math.random() * 64 - 32;
+			groundGeometry.vertices[ i ].x +=  Math.random() * 128 - 64;
 		}
 
-		var groundMaterial = new THREE.MeshLambertMaterial( { color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
+		var groundMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading, vertexColors: THREE.VertexColors } );
 		var groundMesh = new THREE.Mesh( groundGeometry,  groundMaterial);	
 
-		var wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading, wireframe: true,  wireframeLinewidth: 2 } )
+		var wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading,
+			wireframe: true,  wireframeLinewidth: 2 } )
 		var wireMesh = new THREE.Mesh( groundGeometry,  wireMaterial);
 		wireMesh.position.y = 8;
 
@@ -128,35 +164,71 @@ var tweetopia = {
 
 		// Add Sky
 
-		var skyGeometry = new THREE.CylinderGeometry( 6000, 6000, 2000, 40, 1, true );
-		var faceIndices = [ 'a', 'b', 'c', 'd' ];
-		for ( var i = 0, l = skyGeometry.faces.length; i < l; i ++ ) {
-			var curFace = skyGeometry.faces[i];
-			var vertexCount = ( curFace instanceof THREE.Face3 ) ? 3 : 4;
+		var skyGeometry = new THREE.CylinderGeometry( 6200, 6200, 4200, 40, 1, true );
 
-			for ( var j = 0; j < vertexCount; j++) {
+		var skyShader = THREE.ShaderUtils.lib["sky"];
+		var skyUniforms = THREE.UniformsUtils.clone( skyShader.uniforms );
 
-				var vertexIndex = curFace[ faceIndices[ j ] ];
-				var vertex = skyGeometry.vertices[ vertexIndex ];
+		var skyTexture = THREE.ImageUtils.loadTexture( "textures/stripes.png" );
+		skyTexture.wrapS = skyTexture.wrapT = THREE.RepeatWrapping;	
 
-				var color = new THREE.Color( 0xffffff );
+		skyUniforms["map"].texture = skyTexture;
+		skyUniforms["topColor"].value = new THREE.Vector3( 0, 0, 0);
+		skyUniforms["bottomColor"].value = new THREE.Vector3( 95.0 / 256.0, 115.0 / 256.0 , 128.0 / 256.0);
+		skyUniforms["offsetRepeat"].value = new THREE.Vector4( 0, 0, 36, 3);
 
-				if (vertex.y < 0 )
-					color.setRGB(.5,.6,.7);
-				else
-					color.setRGB(.2,.2,.2);
+		var skyMaterial = new THREE.ShaderMaterial( {
+			uniforms: skyUniforms,
+			vertexShader: skyShader.vertexShader,
+			fragmentShader: skyShader.fragmentShader,
+		});
 
-				skyGeometry.faces[ i ].vertexColors.push(color);
-			}
-		}
-		
-		var skyMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, shading: THREE.FlatShading, 
-			vertexColors: THREE.VertexColors, fog: false } )
 		var skyMesh = new THREE.Mesh( skyGeometry,  skyMaterial);
-		skyMesh.doubleSided = true;
-		skyMesh.position.y = 800;
+		skyMesh.flipSided = true;
+		skyMesh.position.y = 1800;
 
 		tweetopia.scene.add(skyMesh);
+
+		// Add stars
+
+		var starsShader = THREE.ShaderUtils.lib["stars"];
+		var starsUniforms = THREE.UniformsUtils.clone( starsShader.uniforms );
+
+		starsUniforms["map"].texture = THREE.ImageUtils.loadTexture( "textures/star.png" );
+	
+        var starsAttributes = {
+                size: { type: 'f', value: [] },
+        };	
+
+		var starsGeometry = new THREE.Geometry();
+
+		for ( var i = 0; i < 128; i ++ ) {
+
+			var angle = Math.random() * Math.PI*2;
+			var radius = 6000 - Math.random() * 400;
+
+			var vertex = new THREE.Vector3();
+			vertex.x = radius * Math.cos(angle);
+			vertex.y = Math.random() * 3200 ;
+			vertex.z = radius * Math.sin(angle);
+
+			starsGeometry.vertices.push( vertex );
+
+			starsAttributes.size.value[i] = 4.0 + Math.random() * 6.0;
+		}		
+
+		var starsMaterial = new THREE.ShaderMaterial( {
+			uniforms: starsUniforms,
+			attributes: starsAttributes,
+			vertexShader: starsShader.vertexShader,
+			fragmentShader: starsShader.fragmentShader,
+			transparent:true
+		});
+
+		var starsParticles = new THREE.ParticleSystem( starsGeometry, starsMaterial );
+
+		tweetopia.scene.add(starsParticles);
+
 	},
 
 	// Fetch Twitter data
@@ -175,15 +247,18 @@ var tweetopia = {
 				else
 					tweetopia.checkLoad();
 			},	
-			error: function() {	
+			error: function() {
+				console.log("Error fetching tweets.")	
 			}
 		});	
 	},
 
 	updateData: function () {
 
+		if (tweetopia.panels.length > 80) return;
+
 		var searchURL="http://search.twitter.com/search.json";
-		var searchQueryString = tweetopia.twitterData.refresh_url + "&rpp=25&callback=?"
+		var searchQueryString = tweetopia.twitterData.refresh_url + "&rpp=20&callback=?"
 		tweetopia.fetchData(searchURL + searchQueryString);
 
 	},
@@ -194,6 +269,8 @@ var tweetopia = {
 
 		if (data.results.length) {
 			var panelArray = [];
+
+			var panelGeometry = new THREE.PlaneGeometry( 256, 128, 1, 1 );
 
 			for (var resultIndex in data.results) {
 
@@ -209,11 +286,11 @@ var tweetopia = {
 				// Build Panel
 
 				var panelTexture = new THREE.Texture( $(tweetCanvas)[0] );
-				panelTexture.minFilter = panelTexture.magFilter = THREE.LinearFilter;
 				panelTexture.needsUpdate = true;
 				
 				var panelMaterial = new THREE.MeshBasicMaterial( { map: panelTexture, transparent: true} );
-				var panelMesh = new THREE.Mesh( new THREE.PlaneGeometry( 240, 80, 1, 1 ),  panelMaterial);	
+				panelMaterial.doubleSided = true;
+				var panelMesh = new THREE.Mesh( panelGeometry,  panelMaterial);	
 				
 				panelMesh.rotation.x = Math.PI/2;
 				panelMesh.position.x = Math.random() * 6000 - 3000;
@@ -230,16 +307,16 @@ var tweetopia = {
 				// Add dude
 
 				var dudeGeometry = new THREE.CylinderGeometry( 12, 12, 4, 24, 1);
-				var dudeMaterial = new THREE.MeshLambertMaterial({color: 0x667799});
+				var dudeMaterial = new THREE.MeshLambertMaterial({color: 0x5e6f7a});
 				var dudeMesh = new THREE.Mesh(dudeGeometry, dudeMaterial);
 
 				dudeMesh.scale.x = dudeMesh.scale.y = dudeMesh.scale.z = .1;
 				dudeMesh.rotation.x = Math.PI/2;
 				dudeMesh.position.x = panelMesh.position.x - 48;
 				dudeMesh.position.y = 72;
-				dudeMesh.position.z = panelMesh.position.z;
+				dudeMesh.position.z = panelMesh.position.z + .1;
 
-				var dudeRingMaterial = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture( "textures/dudeRing.png" ), transparent: true});
+				var dudeRingMaterial = new THREE.MeshBasicMaterial({map: THREE.ImageUtils.loadTexture( "textures/dudeRing.png" ), transparent:true});
 				var dudeRingMesh = new THREE.Mesh(new THREE.PlaneGeometry( 32, 32, 1, 1), dudeRingMaterial);
 				
 				dudeRingMesh.doubleSided = true;
@@ -260,9 +337,11 @@ var tweetopia = {
 			}
 
 			if (panelArray.length) {
-
+				
 				tweetopia.curPanelIndex += panelArray.length;
 				tweetopia.panels = panelArray.concat(tweetopia.panels);
+
+				console.log("Added " + panelArray.length + " new tweets (" + tweetopia.panels.length + " total).");
 			}
 			
 		}
@@ -272,7 +351,11 @@ var tweetopia = {
 
 	drawCanvas: function (tweetText) {
 
-			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:960,height:320});
+			tweetText = tweetText.replace( /\&amp;/g, '&' );
+			tweetText = tweetText.replace( /\&lt;/g, '<' );
+			tweetText = tweetText.replace( /\&gt;/g, '>' );
+
+			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:1024,height:512});
 			var tweetContext = $(tweetCanvas)[0].getContext('2d');
 
 			// Draw background
@@ -318,8 +401,8 @@ var tweetopia = {
 
 			// Draw Text
 
-			var tweetX = 960/2 - maxLineWidth / 2;
-			var tweetY = 300/2 - totalHeight/2;
+			var tweetX = 1024/2 - maxLineWidth / 2;
+			var tweetY = 512/2 - totalHeight/2 - 8;
 
 			for ( x = 0; x < tweetLines.length; x++) {
 				var curLine = tweetLines[x];

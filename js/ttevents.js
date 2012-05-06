@@ -14,7 +14,7 @@ var ttevents = {
 	
 	onDocumentMouseDown: function (event) {
 		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
-		window.open(curPanel.url);
+		//window.open(curPanel.url);
 
 	},
 
@@ -23,8 +23,8 @@ var ttevents = {
 		var mouseX = ( event.clientX - (tweetopia.renderWidth / 2) );
 		var mouseY = ( event.clientY - (tweetopia.renderHeight / 2) );
 		
-		//tweetopia.camera.rotation.x = (mouseY / (tweetopia.renderHeight /2 )) * -10 * (Math.PI /180);	
-		//tweetopia.camera.rotation.y = (mouseX / (tweetopia.renderWidth /2 )) * -10 * (Math.PI /180);	
+		tweetopia.camera.rotation.x = (mouseY / (tweetopia.renderHeight /2 )) * -10 * (Math.PI /180);	
+		tweetopia.camera.rotation.y = (mouseX / (tweetopia.renderWidth /2 )) * -10 * (Math.PI /180);	
 		
 	},
 	onKeyDown: function ( event ) {

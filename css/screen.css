@@ -1,12 +1,6 @@
 body {
 	margin: 0;
 	padding: 0;
-	background: #666;
-}
-
-.tweetBox {
-	width:400px;
-	height:100px;
-	background: #efefef;
-	margin: 12px;
+	background: #333;
+	cursor: none;
 }

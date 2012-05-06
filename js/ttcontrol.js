@@ -24,14 +24,22 @@ var ttcontrol = {
 	visitPanel: function (visitPanelIndex) {
 
 		var curPanel = tweetopia.panels[visitPanelIndex];
+		var targetTime = 2400;
+
+		//console.log(tweetopia.camera.position.z + " " + curPanel.position.z);
+		if (tweetopia.camera.position.z < curPanel.position.z){
+			targetTime = 3600;
+			//console.log("flip");
+		} 
 
         new TWEEN.Tween( tweetopia.camera.target )
-                .to( { x: curPanel.position.x, y: 112, z: curPanel.position.z }, 2400 )
+                .to( { x: curPanel.position.x, y: [80,112], z: curPanel.position.z }, targetTime )
+                .interpolation(TWEEN.Interpolation.CatmullRom)
                 .easing( TWEEN.Easing.Quintic.InOut)
                 .start();
 
         var tweenFly = new TWEEN.Tween( tweetopia.camera.position )
-                .to( { x: curPanel.position.x - 64, y: [192,96], z: curPanel.position.z + 320 }, 3600 )
+                .to( { x: curPanel.position.x - 64, y: [128,96], z: curPanel.position.z + 320 }, 3600 )
                 .interpolation(TWEEN.Interpolation.CatmullRom)
                 .easing( TWEEN.Easing.Cubic.In)
                 .onComplete( function() { ttcontrol.showPanel() });

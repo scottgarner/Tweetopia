@@ -1,3 +1,9 @@
+r08
+
+-	Splash screen on startup.
+-	Custom shaders for star and sky.
+-	Refined ground to match style frame.
+
 r07
 
 -	Added SimpleNoise.js for more fluid terrain.
