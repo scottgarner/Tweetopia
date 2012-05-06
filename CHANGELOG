@@ -1,6 +1,12 @@
+r04
+
+-	Added Three.js for 3D environment with functions to setup, animate and render.
+- 	New ttevents object for handling event callbacks.
+-	Simple panel animation using canvases as textures.
+
 r03
 
--	No new logic, organization release.
+-	No new logic, organization release (wash dishes while you cook).
 -	CSS and JS split into files with new tweetopia control object.
 
 r02
