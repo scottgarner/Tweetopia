@@ -1,8 +1,7 @@
 <html>
 	
 	<head>
-
-		<title>Tweetopia: Round One</title>
+		<title>Tweetopia: Round Two</title>
 	
 		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"> </script>
 	
@@ -18,17 +17,53 @@
 				success: function( data ) {
 					if (data.results.length) {
 						for (resultIndex in data.results) {
+
 							tweetText = data.results[resultIndex].text;
-							tweetDiv = $('<div/>').addClass('tweetBox');
-							$(tweetDiv).html(tweetText);
-							$('body').append(tweetDiv);
+
+							if (tweetText.substr(0,1) == "@") continue;
+							if (tweetText.substr(0,2) == "RT") continue;
+
+							// Setup canvas and text
+
+							tweetWidth = 380;
+							tweetFontSize = 16;
+							tweetLineHeight = 1.5;
+							tweetX = 10;
+							tweetY = 10 + tweetFontSize;
+
+							tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:400,height:100});
+							tweetContext = $(tweetCanvas)[0].getContext('2d');
+							tweetContext.font = tweetFontSize + "px/" + tweetLineHeight + " Georgia";
+
+							$('body').append(tweetCanvas);
+
+							// Manually wrap lines
+
+							var tweetWords = tweetText.split(" ");
+							var tweetLine = "";
+
+							for (var x = 0; x < tweetWords.length; x++) {
+								var curLine = tweetLine + tweetWords[x] + " ";
+								var curMetrics = tweetContext.measureText(curLine);
+								var curWidth = curMetrics.width;
+								if (curWidth > tweetWidth) {
+									tweetContext.fillText(tweetLine, tweetX, tweetY);
+									tweetLine = tweetWords[x] + " ";
+									tweetY += tweetFontSize * tweetLineHeight;
+								}
+								else {
+									tweetLine = curLine;
+								}
+							}
+							tweetContext.fillText(tweetLine, tweetX, tweetY);
+							
 						}
 					}
 				},	
 				error: function() {	
 				}
 			});
-			
+
 		</script>
 	
 		<style>

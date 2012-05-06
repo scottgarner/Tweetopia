@@ -1,3 +1,7 @@
+r02
+
+-	This release creates canvas elements for the results, with logic to auto wrap and format the text.
+
 r01
 
 -	This initial release polls the Twitter search API and displays the resulting tweets in divs.
