@@ -1,3 +1,12 @@
+r06
+
+-	Added Tween.js for animating properties with easing.
+-	Predistrubuted panels.
+-	Automatic camera animation between panels.
+-	Refined camera animation to look ahead to next panel.
+-	Addition of ground plane with generative color and form.
+-	Addition of sky cylinder.
+
 r05
 
 -	Planar distribution of tweet panels.

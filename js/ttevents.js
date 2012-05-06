@@ -23,14 +23,14 @@ var ttevents = {
 	},
 	onKeyDown: function ( event ) {
 		//console.log(event.keyCode);
-		switch( event.keyCode ) {
-			case 78: /*N*/	
-				tweetopia.nextPanel();
-				break;
-			case 80: /*P*/
-				tweetopia.previousPanel(); 
-				break;
-		}
+		// switch( event.keyCode ) {
+		// 	case 78: /*N*/	
+		// 		tweetopia.nextPanel();
+		// 		break;
+		// 	case 80: /*P*/
+		// 		tweetopia.previousPanel(); 
+		// 		break;
+		// }
 
 	}
 }
