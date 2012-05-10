@@ -22,6 +22,7 @@ var ttevents = {
 	},
 
 	onDocumentMouseDown: function (event) {
+
 		var curPanel = tweetopia.panels[tweetopia.curPanelIndex];
 
 		var vector = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1, 0.5 );
@@ -29,9 +30,19 @@ var ttevents = {
 	
 		var ray = new THREE.Ray( tweetopia.camera.position, vector.subSelf( tweetopia.camera.position ).normalize() );
 	
-		var intersects = ray.intersectObjects( [curPanel] );
+		// Check for character or label click
 
-		if ( intersects.length > 0 ) {
+		var characterIntersects = ray.intersectObjects( [curPanel.characterMesh, curPanel.characterMesh.labelMesh] );
+
+		if ( characterIntersects.length > 0 ) {
+			window.open(curPanel.url);
+		}
+
+		// Check for bubble click
+
+		var bubbleIntersects = ray.intersectObjects( [curPanel] );
+
+		if ( bubbleIntersects.length > 0 ) {
 
 			var holdMaterial = curPanel.material;
 			curPanel.material = tweetopia.uvMaterial;
@@ -67,13 +78,11 @@ var ttevents = {
 
 		}
 
-		//window.open(curPanel.url);
-
 	},
 
 	onDocumentMouseMove: function (event) {
 	
-		document.body.style.cursor = 'default';
+		$('#render').css('cursor', 'default');
 		
 	},
 	onKeyDown: function ( event ) {

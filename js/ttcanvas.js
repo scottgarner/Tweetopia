@@ -1,25 +1,74 @@
+"use strict";
+
 var ttcanvas = {
+
+	// Create username label
+
+	drawLabel: function(username) {
+
+		username = username.toUpperCase();	
+
+		var labelCanvas = $('<canvas/>').attr({width:512,height:64});
+		var labelContext = $(labelCanvas)[0].getContext('2d');
+		labelContext.font = "300 " + 24 + "px/" + 1.5 + " Nunito";	
+		labelContext.textBaseline = "baseline";
+		labelContext.lineWidth = "8";		
+		
+		var labelMetrics = labelContext.measureText(username);			
+
+		// Draw Bubble
+
+			//Center
+
+ 		labelContext.drawImage(tweetopia.labelImage, 24, 0, 
+ 			tweetopia.labelImage.width - 24 * 2, tweetopia.labelImage.height, 
+ 			512/2 - labelMetrics.width /2, 0, 
+ 			labelMetrics.width, tweetopia.labelImage.height);	
+
+ 			// Left
+
+ 		labelContext.drawImage(tweetopia.labelImage, 0, 0, 
+ 			26, tweetopia.labelImage.height, 
+ 			512/2 - labelMetrics.width /2 - 24, 0,
+ 			26, tweetopia.labelImage.height); 
+
+ 			// Right
+
+ 		labelContext.drawImage(tweetopia.labelImage, tweetopia.labelImage.width - 26, 0,
+ 			26, tweetopia.labelImage.height, 
+ 			512/2 + labelMetrics.width /2 - 2, 0,
+ 			26, tweetopia.labelImage.height); 
+
+
+		// Draw text
+
+		labelContext.fillStyle = "rgb(0,0,255)";
+		labelContext.fillText(username, 512/2 - labelMetrics.width /2, 64 /2 + 10);
+
+		return labelCanvas;
+	},
 
 	// Create tweet canvas
 
-	drawBubble: function (tweetText, tweetEntities) {
+	drawBubble: function (tweetText, tweetUser, tweetEntities) {
 
 			var tweetCanvas = $('<canvas/>').addClass('tweetBox').attr({width:1024,height:512});
 			var tweetContext = $(tweetCanvas)[0].getContext('2d');
 
-			// Draw background
+			// Draw Bubble
 
-    		tweetContext.drawImage(tweetopia.bubbleImage,0,0);	
+     		tweetContext.drawImage(tweetopia.bubbleImage,0,0);	
 
 			// Manually wrap lines
 
 			var tweetWidth = 864;
 			var tweetFontSize = 36;
-			var tweetLineHeight = 1.5;
+			var tweetFontSizeSmall = 22;
+			var tweetLineHeight = 1.5;	
 
-			tweetContext.fillStyle = "rgba(32, 32, 32, .75)";
-			tweetContext.font = tweetFontSize + "px/" + tweetLineHeight + " Georgia";	
-			tweetContext.textBaseline = "bottom";		
+			tweetContext.fillStyle = "rgb(255,0,0)";
+			tweetContext.font = "300 " + tweetFontSize + "px/" + tweetLineHeight + " Nunito";	
+			tweetContext.textBaseline = "baseline";				
 
 			var tweetWords = tweetText.split(" ");
 			var tweetLines = [""];
@@ -28,28 +77,33 @@ var ttcanvas = {
 			var maxLineWidth = 0;
 
 			for (var x = 0; x < tweetWords.length; x++) {
-				var curLine = tweetLines[tweetLineIndex] + tweetWords[x] + " ";
-				var testMetrics = tweetContext.measureText(curLine);
+				var curLine = tweetLines[tweetLineIndex] + tweetWords[x];
+
+				var curLineClean = curLine;
+				curLineClean = curLineClean.replace(/\&amp;/g,'&');
+				curLineClean = curLineClean.replace(/\&lt;/g,'<');
+				curLineClean = curLineClean.replace(/\&gt;/g,'>');
+
+				var testMetrics = tweetContext.measureText(curLineClean);
 
 				if (testMetrics.width > tweetWidth) {
 					tweetLineIndex++;
 					tweetLines[tweetLineIndex] = tweetWords[x] + " ";
 				}
 				else {
-					tweetLines[tweetLineIndex] = curLine;
+					tweetLines[tweetLineIndex] = curLine  + " ";
+					if (testMetrics.width > maxLineWidth) maxLineWidth = testMetrics.width;
 				}
 
-				var curMetrics = tweetContext.measureText(tweetLines[tweetLineIndex]);
-				if (curMetrics.width > maxLineWidth) maxLineWidth = curMetrics.width;
 			}
 
 			var lineHeight = tweetFontSize * tweetLineHeight;
-			var totalHeight = lineHeight * (tweetLines.length - 1)   ;
+			var totalHeight = lineHeight * (tweetLines.length);
 
 			// Format Text
 
 			var letterIndex = 0;
-			var tweetY = 512/2 - totalHeight/2;
+			var tweetY = 512/2 - totalHeight/2 + tweetFontSize;
 
 			var boundingBox;
 			var boundingBoxes = [];
@@ -84,43 +138,51 @@ var ttcanvas = {
 
 					var curLetterMetrics = tweetContext.measureText(curLetter);
 
-					var tweetEntityTypes = [tweetEntities.media, tweetEntities.urls,
-						tweetEntities.user_mentions, tweetEntities.hashtags];
+					if (tweetEntities) {
 
-					for (var curEntityTypeIndex in tweetEntityTypes) {
+						var tweetEntityTypes = [];
 
-						var curEntityType = tweetEntityTypes[curEntityTypeIndex];
+						if (tweetEntities.hasOwnProperty('media')) tweetEntityTypes.push(tweetEntities.media);
+						if (tweetEntities.hasOwnProperty('urls')) tweetEntityTypes.push(tweetEntities.urls);
+						if (tweetEntities.hasOwnProperty('user_mentions')) tweetEntityTypes.push(tweetEntities.user_mentions);
+						if (tweetEntities.hasOwnProperty('hashtags')) tweetEntityTypes.push(tweetEntities.hashtags);
 
-						if (curEntityType) {
-							for (var curEntityIndex in curEntityType) {
-								var curEntity = curEntityType[curEntityIndex];
-								if (letterIndex == curEntity.indices[0]) {
-									boundingBox = {};
-									boundingBox.start = { x:tweetX, y:tweetY };
+						for (var curEntityTypeIndex in tweetEntityTypes) {
 
-									if ( curEntity.url )
-										boundingBox.url = curEntity.url;
-									else if ( curEntity.screen_name)
-										boundingBox.url = "http://twitter.com/#!/" + curEntity.screen_name;
-									else if ( curEntity.text)
-										boundingBox.url = "https://twitter.com/#!/search/%23" + curEntity.text;
-									else
-										boundingBox.url = curPanel.url;
+							var curEntityType = tweetEntityTypes[curEntityTypeIndex];
 
-									tweetContext.fillStyle = tweetopia.colors[1].getContextStyle();
-									break;
-								}
-								if (letterIndex == curEntity.indices[1]) {
-									boundingBox.end = {x: tweetX, y: tweetY - tweetFontSize};
-									boundingBoxes.push(boundingBox);
-									tweetContext.fillStyle = "rgba(32, 32, 32, .75)";
-									break;
+							if (curEntityType) {
+								for (var curEntityIndex in curEntityType) {
+									var curEntity = curEntityType[curEntityIndex];
+									if (letterIndex == curEntity.indices[0]) {
+										boundingBox = {};
+										boundingBox.start = { x:tweetX, y:tweetY };
+
+										if ( curEntity.url )
+											boundingBox.url = curEntity.url;
+										else if ( curEntity.screen_name)
+											boundingBox.url = "http://twitter.com/#!/" + curEntity.screen_name;
+										else if ( curEntity.text)
+											boundingBox.url = "https://twitter.com/#!/search/%23" + curEntity.text;
+										else
+											boundingBox.url = curPanel.url;
+
+										tweetContext.fillStyle = "rgb(0,255,0)";
+										break;
+									}
+									if (letterIndex == curEntity.indices[1]) {
+										boundingBox.end = {x: tweetX, y: tweetY - tweetFontSize};
+										boundingBoxes.push(boundingBox);
+										tweetContext.fillStyle = "rgb(255,0,0)";
+										break;
+									}
 								}
 							}
-						}
 
-					}
+						}
 					
+					}
+
 					// Write Text
 
 					tweetContext.fillText(curLetter, tweetX, tweetY);
@@ -132,6 +194,32 @@ var ttcanvas = {
 
 			}
 
+			tweetCanvas.boundingBoxes = boundingBoxes;
+
+
+			// Add username
+
+			/*
+			var lastLineMetrics = tweetContext.measureText(tweetLines[tweetLines.length - 1]);
+
+			if (tweetLines.length == 4)
+				tweetY -= lineHeight;
+			// else if (lastLineMetrics.width < maxLineWidth /1.5 )
+			// 	tweetY -= lineHeight;
+			else 
+				tweetY -= tweetFontSizeSmall /2;
+
+			var userMetrics;	
+
+			tweetUser = "—" + tweetUser.toUpperCase();
+			tweetContext.fillStyle = "rgb(196,196,196)";
+			tweetContext.font = "300 " + tweetFontSizeSmall + "px/" + tweetLineHeight + " Nunito";
+			userMetrics = tweetContext.measureText(tweetUser);
+			tweetContext.fillText(tweetUser, (1024/2 + maxLineWidth /2) -  userMetrics.width, tweetY );
+			*/
+
+			// Debug bounding boxes
+
 			// for ( var curBoundingBoxIndex in boundingBoxes) {
 			// 	var curBoundingBox = boundingBoxes[curBoundingBoxIndex];
 			
@@ -140,7 +228,13 @@ var ttcanvas = {
 			// 		curBoundingBox.end.y - curBoundingBox.start.y);
 			// }
 
-			tweetCanvas.boundingBoxes = boundingBoxes;
+
+			// Debug display canvas	
+
+    		//$("#main").prepend(tweetCanvas);		
+
+
+			// Return Object			
 
 			return tweetCanvas;
 	},

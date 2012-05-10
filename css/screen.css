@@ -17,6 +17,7 @@ body {
 	background: linear-gradient(top, #000000 0%,#5f7380 100%);
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#000000', endColorstr='#5f7380',GradientType=0 );
 
+	overflow: hidden;
 }
 
 #main {

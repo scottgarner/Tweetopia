@@ -1,3 +1,14 @@
+r10
+
+-	GA tracking.
+-	Initial character faces.
+-	Username display.
+-	Image contrast.
+-	Webfont Support
+-	More careful bubble distribution.
+-	Better handling of Twitter requests.
+-	Day/night color changes
+
 r09
 
 -	Detection of WebGL support.
