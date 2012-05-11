@@ -37,7 +37,6 @@ r07
 
 r06
 
--	Added Tween.js for animating properties with easing.
 -	Predistrubuted panels.
 -	Automatic camera animation between panels.
 -	Refined camera animation to look ahead to next panel.
@@ -46,6 +45,7 @@ r06
 
 r05
 
+-	Added Tween.js for animating properties with easing.
 -	Planar distribution of tweet panels.
 -	Support for keyboard-controlled camera animation between panels.
 
