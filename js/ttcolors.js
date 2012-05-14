@@ -128,7 +128,7 @@ var ttcolors = {
 
 		// Check if an update is needed
 
-		amount = Math.floor(amount * 100) / 100;
+		amount = Math.floor(amount * 1000) / 1000;
 		if (amount == ttcolors.lastAmount) return;
 		ttcolors.lastAmount = amount;
 
