@@ -1,6 +1,17 @@
+Tweetopia
+=========
+
+#### 3D Twitter Visualization ####
+
+Tweetopia is a 3D Twitter hashtag visualizaiton based on WebGL and built using Three.js
+
+Learn more at the [project page](http://scott.j38.net/interactive/tweetopia/) or see it live at [Tweetopia.net](http://tweetopia.net/).
+
+### Changelog ###
+
 r11
 
--	Minor tweaks for initial public release.
+-	Minor tweaks for initial public
 
 r10
 
