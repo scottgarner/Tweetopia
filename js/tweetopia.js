@@ -14,8 +14,8 @@ var tweetopia = {
 
 		// Check QueryString
 
-    	var match = RegExp('[?&]dayLength=([^&/]*)').exec(window.location.search);
-    	if (match != null) tweetopia.dayLength = match[1];	
+		var match = RegExp('[?&]dayLength=([^&/]*)').exec(window.location.search);
+		if (match != null) tweetopia.dayLength = match[1];	
 
 		// Functional Globals
 
