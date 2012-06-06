@@ -2,7 +2,7 @@
 
 var tweetopia = {
 
-	dayLength: 24 * 60,		// Length of day in seconds 
+	dayLength: 240,			// Length of day in seconds 
 	panelDistance: 300,		// Camera distance from panel
 	maxTweets: 80,			// Maximum number of tweets
 	
@@ -11,6 +11,11 @@ var tweetopia = {
 	init: function() {
 
 		$('#main').css('cursor', 'none');
+
+		// Check QueryString
+
+    	var match = RegExp('[?&]dayLength=([^&/]*)').exec(window.location.search);
+    	if (match != null) tweetopia.dayLength = match[1];	
 
 		// Functional Globals
 
@@ -156,7 +161,7 @@ var tweetopia = {
 
 		tweetopia.camera = new THREE.PerspectiveCamera( 35, tweetopia.renderWidth/ tweetopia.renderHeight, .1, 12400 );
 		tweetopia.camera.position.y = 256;
-		tweetopia.camera.position.z = 1200;
+		tweetopia.camera.position.z = 1600;
 		tweetopia.camera.target = new THREE.Vector3( 0, 256, 0 );
 
 		tweetopia.scene = new THREE.Scene();
@@ -266,7 +271,7 @@ var tweetopia = {
 
 	animate: function() {	
 	    TWEEN.update();
-	    ttcolors.update();
+	    if (tweetopia.dayLength > 0) ttcolors.update();
 		tweetopia.render();
 		requestAnimationFrame( tweetopia.animate );		
 	},
