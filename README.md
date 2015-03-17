@@ -7,6 +7,8 @@ Tweetopia is a 3D Twitter hashtag visualizaiton based on WebGL and built using T
 
 Learn more at the [project page](http://scott.j38.net/interactive/tweetopia/) or see it live at [Tweetopia.net](http://www.tweetopia.net/).
 
+This work is licensed under a [Creative Commons Attribution 3.0 Unported License](http://creativecommons.org/licenses/by/3.0/).
+
 ### Changelog ###
 
 r12
