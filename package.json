@@ -1,13 +1,13 @@
 {
   "name": "tweetopia",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "dependencies": {
-    "express": "latest",
-    "mtwitter": "latest",
+    "express": "*",
+    "mtwitter": "*",
     "npm": "^5.7.1"
   },
   "engines": {
-    "node": "latest",
-    "npm": "latest"
+    "node": "*",
+    "npm": "*"
   }
 }
