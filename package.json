@@ -1,6 +1,6 @@
 {
   "name": "tweetopia",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "dependencies": {
     "express": "latest",
     "mtwitter": "latest",
