@@ -1,4 +1,6 @@
-var port = process.env.PORT;
+require('dotenv').config();
+
+var port = process.env.PORT || 3000;
 
 var express = require("express");
 var app = express();
@@ -17,7 +19,7 @@ var twitter = new Twitter({
 
 //
 
-app.get('/ws', function(request, response) {
+app.get('/ws', function (request, response) {
 
 	var options = JSON.parse(JSON.stringify(request.query));
 
@@ -29,14 +31,13 @@ app.get('/ws', function(request, response) {
 
 	twitter.get(
 		'search/tweets',
-		options, 
-		function(err, item) {
+		options,
+		function (err, item) {
 
 			if (item != null) {
 
-				 var json = JSON.stringify(item);
-				// response.writeHead(200, {'content-type':'application/json'}); 
-				response.jsonp(item);	
+				var json = JSON.stringify(item);
+				response.jsonp(item);
 			}
 		}
 	);
@@ -44,6 +45,6 @@ app.get('/ws', function(request, response) {
 });
 
 
-app.listen(port, function() {
+app.listen(port, function () {
 	console.log("Listening on " + port);
 });

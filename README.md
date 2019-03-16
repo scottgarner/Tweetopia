@@ -11,6 +11,10 @@ This work is licensed under a [Creative Commons Attribution 3.0 Unported License
 
 ### Changelog ###
 
+r13
+
+-   Cleanup for migration from Heroku to Dokku.
+
 r12
 
 -	Major overhaul to support Twitter API changes.
