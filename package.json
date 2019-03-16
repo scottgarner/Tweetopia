@@ -4,6 +4,7 @@
   "description": "Realtime WebGL Twitter visualization.",
   "main": "tweetopia.js",
   "scripts": {
+    "start": "node tweetopia.js",
     "dev": "nodemon tweetopia.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
