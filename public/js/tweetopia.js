@@ -5,6 +5,8 @@ var tweetopia = {
 	dayLength: 240,			// Length of day in seconds 
 	panelDistance: 300,		// Camera distance from panel
 	maxTweets: 80,			// Maximum number of tweets
+
+	searchUrl: "/.netlify/functions/tweetopia",
 	
 	// Main init function
 
@@ -44,9 +46,8 @@ var tweetopia = {
 			location.hash = searchString = "WebGL";
 
 		var searchCount = tweetopia.maxTweets;
-		var searchURL="/ws/";
-		var searchQueryString = "?q=%23" + searchString + "&rpp=" + searchCount + "&include_entities=1";
-		tweetopia.fetchData(searchURL + searchQueryString);
+		var searchQueryString = "?q=%23" + searchString + "&count=" + searchCount + "&include_entities=1";
+		tweetopia.fetchData(tweetopia.searchUrl + searchQueryString);
 
 		// Preload Images
 
@@ -115,11 +116,13 @@ var tweetopia = {
 
 	// Fetch Twitter data
 
-	fetchData: function (searchURL) {
+	fetchData: function (searchUrl) {
+
+		console.log(searchUrl);
 
 		$.ajax( {
-			url: searchURL,
-			dataType: "jsonp",
+			url: searchUrl,
+			dataType: "json",
 			timeout : 5000,
 		})
 		.done(function( data ) {
@@ -142,11 +145,8 @@ var tweetopia = {
 		var searchCount = tweetopia.maxTweets - tweetopia.panels.length;
 		if (searchCount <= 0) return;
 
-		var searchURL="/ws/";
-		var searchQueryString = tweetopia.twitterData.search_metadata.refresh_url + "&rpp=" + searchCount;
-		tweetopia.fetchData(searchURL + searchQueryString);
-
-
+		var searchQueryString = tweetopia.twitterData.search_metadata.refresh_url + "&count=" + searchCount;
+		tweetopia.fetchData(tweetopia.searchUrl + searchQueryString);
 	},
 
 	// Setup Three.js scene

@@ -11,6 +11,10 @@ This work is licensed under a [Creative Commons Attribution 3.0 Unported License
 
 ### Changelog ###
 
+r14
+
+- Moving to Netlify with a serverless function.
+
 r13
 
 -   Cleanup for migration from Heroku to Dokku.
@@ -22,7 +26,7 @@ r12
 
 r11
 
--	Minor tweaks for initial public
+-	Minor tweaks for initial public release.
 
 r10
 
