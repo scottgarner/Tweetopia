@@ -6,7 +6,7 @@ var tweetopia = {
 	panelDistance: 300,		// Camera distance from panel
 	maxTweets: 80,			// Maximum number of tweets
 
-	searchUrl: "/.netlify/functions/tweetopia",
+	searchUrl: "/data/data.json",
 	
 	// Main init function
 

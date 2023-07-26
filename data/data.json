@@ -1,0 +1,98 @@
+{
+    "statuses": [
+        {
+            "created_at": "2023-07-24 12:34:56",
+            "id": "1234567890123456789",
+            "text": "I'm thrilled to see @elonmusk taking the helm at Twitter! Exciting times ahead! #ElonMusk #TwitterLeadership",
+            "user": {
+                "id": "9876543210987654321",
+                "screen_name": "ExcitedSupporter123"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:01",
+            "id": "1234567890123456790",
+            "text": "Go @elonmusk! His visionary leadership will bring new innovations to Twitter. Can't wait to see what's next! #ElonMusk #Innovation",
+            "user": {
+                "id": "9876543210987654322",
+                "screen_name": "TechEnthusiast456"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:06",
+            "id": "1234567890123456791",
+            "text": "With @elonmusk at the helm, Twitter is bound for the stars! Let's make Twitter the best platform ever! #ElonMusk #TwitterToTheMoon",
+            "user": {
+                "id": "9876543210987654323",
+                "screen_name": "SocialMediaGuru789"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:11",
+            "id": "1234567890123456792",
+            "text": "Elon Musk leading Twitter is a match made in tech heaven! Excited for the future of this amazing platform! #ElonMusk #TechHeaven",
+            "user": {
+                "id": "9876543210987654324",
+                "screen_name": "InnovateWithElon234"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:16",
+            "id": "1234567890123456793",
+            "text": "I fully support @elonmusk's leadership at Twitter! The possibilities are endless with his brilliant mind at work. #ElonMusk #EndlessPossibilities",
+            "user": {
+                "id": "9876543210987654325",
+                "screen_name": "DreamBig_567"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:21",
+            "id": "1234567890123456794",
+            "text": "Cheers to @elonmusk becoming the leader of Twitter! Exciting times are ahead, and I'm eager to be part of it! #ElonMusk #ExcitingTimes",
+            "user": {
+                "id": "9876543210987654326",
+                "screen_name": "TweetWithPassion_890"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:26",
+            "id": "1234567890123456795",
+            "text": "The news of @elonmusk leading Twitter has got me thrilled! Can't wait to see his influence on this platform! #ElonMusk #Thrilled",
+            "user": {
+                "id": "9876543210987654327",
+                "screen_name": "SocialMediaStar123"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:31",
+            "id": "1234567890123456796",
+            "text": "Brace yourselves for an epic Twitter journey with @elonmusk at the helm! The future looks bright! #ElonMusk #EpicJourney",
+            "user": {
+                "id": "9876543210987654328",
+                "screen_name": "InnovativeTweets456"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:36",
+            "id": "1234567890123456797",
+            "text": "So excited to see @elonmusk leading Twitter! I believe great things are coming for this platform! #ElonMusk #GreatThingsComing",
+            "user": {
+                "id": "9876543210987654329",
+                "screen_name": "TechWizard_789"
+            }
+        },
+        {
+            "created_at": "2023-07-24 12:35:41",
+            "id": "1234567890123456798",
+            "text": "Hats off to Twitter's new leader, @elonmusk! The future of this platform is looking brighter than ever! #ElonMusk #BrightFuture",
+            "user": {
+                "id": "9876543210987654330",
+                "screen_name": "SocialMediaFollower123"
+            }
+        }
+    ],
+    "search_metadata": {
+        "query": "Elon Musk Twitter leadership",
+        "count": 10
+    }
+}
