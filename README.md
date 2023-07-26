@@ -11,6 +11,10 @@ This work is licensed under a [Creative Commons Attribution 3.0 Unported License
 
 ### Changelog ###
 
+r15
+
+- This project has been killed after 10+ years due to Twitter's hostile API policies. A version serving synthetic data is available for historic purposes.
+
 r14
 
 - Moving to Netlify with a serverless function.
